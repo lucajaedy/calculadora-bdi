@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de BDI</title>
+<meta name="description" content="Calcule o BDI de obras e serviços pela fórmula do TCU (Acórdão 2.622/2013) e veja o preço de venda.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fundo: #f3f1ec; --folha: #ffffff; --tinta: #1b1d22; --suave: #5f636b; --fio: #d9d5cc;
+  --destaque: #1f5fbf; --destaque-tinta: #e7eefa; --erro: #b42318;
+  --mono: "IBM Plex Mono", ui-monospace, monospace; --sans: "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #15171b; --folha: #1d2026; --tinta: #eceae5; --suave: #a1a5ad; --fio: #31353d;
+    --destaque: #7fb0ff; --destaque-tinta: #1c2a40; --erro: #ff8a7a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fundo); color: var(--tinta); font: 16px/1.5 var(--sans); }
+main { max-width: 960px; margin: 0 auto; padding: 48px 16px 64px; }
+header p.rotulo { font: 600 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--suave); margin: 0 0 8px; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; }
+header p.sub { color: var(--suave); max-width: 600px; margin: 12px 0 0; }
+.formula { margin: 28px 0 0; padding: 14px 16px; background: var(--folha); border: 1px solid var(--fio); border-left: 3px solid var(--destaque); font: 14px var(--mono); overflow-x: auto; white-space: nowrap; }
+.grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 24px; align-items: start; }
+.folha { background: var(--folha); border: 1px solid var(--fio); border-radius: 6px; }
+fieldset { border: 0; margin: 0; padding: 18px 20px 6px; }
+fieldset + fieldset { border-top: 1px solid var(--fio); }
+legend { float: left; width: 100%; font: 600 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--suave); margin-bottom: 10px; }
+.linha { display: grid; grid-template-columns: 1fr 64px 104px; align-items: center; gap: 10px; padding: 6px 0; clear: both; }
+.linha label { font-size: 15px; }
+.linha .sigla { font: 12px var(--mono); color: var(--suave); text-align: right; }
+.campo { position: relative; }
+.campo input { width: 100%; padding: 8px 26px 8px 10px; border: 1px solid var(--fio); border-radius: 4px; background: var(--fundo); color: var(--tinta); font: 15px var(--mono); text-align: right; }
+.campo::after { content: "%"; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font: 13px var(--mono); color: var(--suave); }
+input:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
+aside { position: sticky; top: 16px; padding: 22px 20px; }
+.resultado-rotulo { font: 600 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--suave); }
+.resultado { font: 600 clamp(44px, 8vw, 64px)/1 var(--mono); letter-spacing: -0.03em; color: var(--destaque); margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+.detalhe { font: 13px var(--mono); color: var(--suave); margin: 0 0 20px; }
+.erro { color: var(--erro); font-size: 14px; min-height: 1.5em; margin: 0; }
+.venda { border-top: 1px dashed var(--fio); padding-top: 16px; }
+.venda label { display: block; font-size: 14px; color: var(--suave); margin-bottom: 6px; }
+.venda input { width: 100%; padding: 9px 10px; border: 1px solid var(--fio); border-radius: 4px; background: var(--fundo); color: var(--tinta); font: 15px var(--mono); text-align: right; }
+.preco { margin-top: 12px; padding: 12px; background: var(--destaque-tinta); border-radius: 4px; display: flex; justify-content: space-between; gap: 10px; font: 15px var(--mono); }
+.preco strong { font-weight: 600; }
+footer { margin-top: 32px; font-size: 13px; color: var(--suave); }
+footer a { color: var(--destaque); }
+@media (max-width: 760px) {
+  .grade { grid-template-columns: 1fr; }
+  aside { position: static; order: -1; }
+  .linha { grid-template-columns: 1fr 96px; }
+  .linha .sigla { display: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="rotulo">Orçamento de obras e serviços</p>
+    <h1>Calculadora de BDI</h1>
+    <p class="sub">Preencha as taxas da sua composição. O BDI é calculado pela fórmula adotada pelo TCU no Acórdão 2.622/2013, e o preço de venda sai a partir do custo direto.</p>
+  </header>
+  <div class="formula" aria-label="Fórmula">BDI = ((1 + AC + S + R + G) × (1 + DF) × (1 + L)) ÷ (1 − I) − 1</div>
+
+  <div class="grade">
+    <form class="folha" id="taxas" autocomplete="off">
+      <fieldset>
+        <legend>Despesas indiretas</legend>
+        <div id="grupo-despesas"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Tributos sobre o preço (I)</legend>
+        <div id="grupo-tributos"></div>
+      </fieldset>
+    </form>
+
+    <aside class="folha" aria-live="polite">
+      <div class="resultado-rotulo">BDI</div>
+      <div class="resultado" id="bdi">0,00%</div>
+      <p class="detalhe" id="detalhe">Tributos (I): 0,00%</p>
+      <p class="erro" id="erro"></p>
+      <div class="venda">
+        <label for="custo">Custo direto (R$)</label>
+        <input id="custo" inputmode="decimal" placeholder="100.000,00">
+        <div class="preco"><span>Preço de venda</span><strong id="preco">—</strong></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    Ferramenta de apoio. Confira as taxas com o seu contador e com o edital. Código aberto em
+    <a href="https://github.com/lucajaedy/calculadora-bdi">github.com/lucajaedy/calculadora-bdi</a>.
+  </footer>
+</main>
+
+<script type="module">
+import { CAMPOS, calcularBdi, precoDeVenda } from './bdi.js';
+
+const TRIBUTOS = new Set(['pis', 'cofins', 'iss', 'cprb']);
+const INICIAIS = { ac: '4,00', s: '0,80', r: '1,27', g: '0,00', df: '1,23', l: '7,40', pis: '0,65', cofins: '3,00', iss: '2,50', cprb: '0,00' };
+const num = (txt) => Number(String(txt).trim().replace(/\./g, '').replace(',', '.')) || 0;
+const pct = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+for (const c of CAMPOS) {
+  const alvo = document.getElementById(TRIBUTOS.has(c.id) ? 'grupo-tributos' : 'grupo-despesas');
+  alvo.insertAdjacentHTML('beforeend', `
+    <div class="linha">
+      <label for="${c.id}">${c.nome}</label>
+      <span class="sigla">${c.sigla}</span>
+      <span class="campo"><input id="${c.id}" inputmode="decimal" value="${INICIAIS[c.id]}"></span>
+    </div>`);
+}
+
+const el = (id) => document.getElementById(id);
+function atualizar() {
+  const taxas = Object.fromEntries(CAMPOS.map((c) => [c.id, num(el(c.id).value)]));
+  try {
+    const { bdi, tributos } = calcularBdi(taxas);
+    el('bdi').textContent = pct(bdi);
+    el('detalhe').textContent = 'Tributos (I): ' + pct(tributos);
+    el('erro').textContent = '';
+    const custo = num(el('custo').value);
+    el('preco').textContent = custo > 0 ? brl(precoDeVenda(custo, bdi)) : '—';
+  } catch (e) {
+    el('bdi').textContent = '—';
+    el('erro').textContent = e.message;
+    el('preco').textContent = '—';
+  }
+}
+document.addEventListener('input', atualizar);
+atualizar();
+</script>
+</body>
+</html>
